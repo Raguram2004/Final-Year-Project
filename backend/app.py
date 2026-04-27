@@ -3,6 +3,8 @@ from flask import (Flask, render_template, request, redirect,
 import sqlite3, io, hashlib, os, pickle, json
 import numpy as np
 from datetime import datetime
+from flask import Flask
+app = Flask(__name__)
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -22,7 +24,7 @@ from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
                                  Table, TableStyle, HRFlowable)
 from reportlab.lib.enums import TA_CENTER
 
-app = Flask(__name__)
+
 app.secret_key = 'heartminder_secret_2025'
 DB_PATH = 'heartminder.db'
 
@@ -209,7 +211,7 @@ def train_models():
         ('gb', GradientBoostingClassifier(n_estimators=100, random_state=42)),
     ]
 
-    MODELS = {}
+    MODELS  = joblib.load('model/model.pkl')
     ACCS = {}
     AUCS = {}
     for key, pipe in base_est:
