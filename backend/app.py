@@ -23,6 +23,8 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
                                  Table, TableStyle, HRFlowable)
 from reportlab.lib.enums import TA_CENTER
+import joblib
+
 
 
 app.secret_key = 'heartminder_secret_2025'
