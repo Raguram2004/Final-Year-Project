@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}History — Heart Minder{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>📋 Prediction History {% if is_admin %}<span style="font-size:0.85rem;font-weight:400;color:var(--text2);">— All Users (Admin View)</span>{% endif %}</h1>
+  <p>{% if is_admin %}Complete database of all predictions made by all users.{% else %}Your personal prediction history.{% endif %}</p>
+</div>
+
+<div class="card">
+  <h2>
+    Database Records
+    <span style="font-size:0.78rem;font-weight:400;color:#aaa;margin-left:8px;">{{ rows|length }} record(s)</span>
+  </h2>
+
+  {% if rows %}
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          {% if is_admin %}<th>User</th>{% endif %}
+          <th>Age</th><th>Sex</th><th>CP</th><th>BP</th><th>Chol</th>
+          <th>MaxHR</th><th>Oldpeak</th><th>CA</th><th>Thal</th>
+          <th>Result</th><th>Risk%</th>
+          <th>LR%</th><th>DT%</th><th>RF%</th><th>GB%</th>
+          <th>Stack Acc</th><th>Date</th>
+          {% if is_admin %}<th>Del</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="color:#aaa;font-size:0.75rem;">{{ r.id }}</td>
+          {% if is_admin %}<td><b>{{ r.username }}</b></td>{% endif %}
+          <td>{{ r.age|int }}</td>
+          <td>{{ 'M' if r.sex==1 else 'F' }}</td>
+          <td>{{ r.cp }}</td>
+          <td>{{ r.trestbps|int }}</td>
+          <td>{{ r.chol|int }}</td>
+          <td>{{ r.thalach|int }}</td>
+          <td>{{ "%.1f"|format(r.oldpeak) }}</td>
+          <td>{{ r.ca|int }}</td>
+          <td>{{ r.thal }}</td>
+          <td>
+            {% if r.prediction == 1 %}
+              <span class="tag tag-red">⚠ Disease</span>
+            {% else %}
+              <span class="tag tag-green">✓ Clear</span>
+            {% endif %}
+          </td>
+          <td><b>{{ "%.1f"|format(r.probability*100) }}%</b></td>
+          <td>{{ "%.0f"|format(r.lr_prob*100) }}%</td>
+          <td>{{ "%.0f"|format(r.dt_prob*100) }}%</td>
+          <td>{{ "%.0f"|format(r.rf_prob*100) }}%</td>
+          <td>{{ "%.0f"|format(r.gb_prob*100) }}%</td>
+          <td>{{ "%.1f"|format(r.stack_acc*100) }}%</td>
+          <td style="font-size:0.75rem;color:#aaa;white-space:nowrap;">{{ r.created_at[:16] }}</td>
+          {% if is_admin %}
+          <td>
+            <form method="post" action="/admin/delete_prediction/{{ r.id }}"
+                  onsubmit="return confirm('Delete this record?');">
+              <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="eicon">📭</div>
+    <div>No predictions found. <a href="{{ url_for('predict_page') }}" style="color:var(--brown);">Run one now →</a></div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

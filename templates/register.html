@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Register — Heart Minder{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="icon">❤</div>
+    <h1>Create Account</h1>
+    <p>Join Heart Minder to start predicting</p>
+  </div>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in msgs %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="post">
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="Choose a username" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Create a password" required>
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" name="password2" placeholder="Repeat password" required>
+    </div>
+    <button type="submit" class="btn btn-red" style="margin-top:6px;">✅ Create Account</button>
+  </form>
+
+  <hr style="margin:20px 0;">
+  <p style="text-align:center;font-size:0.85rem;color:#888;">
+    Already have an account? <a href="{{ url_for('login') }}" style="color:var(--brown);font-weight:700;">Login</a>
+  </p>
+</div>
+{% endblock %}
