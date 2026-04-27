@@ -213,7 +213,7 @@ def train_models():
         ('gb', GradientBoostingClassifier(n_estimators=100, random_state=42)),
     ]
 
-    MODELS  = joblib.load('model/model.pkl')
+    MODELS  =joblib.load('backend/model/model.pkl')
     ACCS = {}
     AUCS = {}
     for key, pipe in base_est:
