@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Heart Minder{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1> Welcome back, {{ session.username }}!</h1>
+  <p>Heart Minder Dashboard — ML-Based Heart Disease Prediction System</p>
+</div>
+
+<!-- Stats Row -->
+<div class="grid4" style="margin-bottom:24px;">
+  <div class="stat-tile">
+    <div class="sval">{{ total }}</div>
+    <div class="slbl">Total Predictions</div>
+  </div>
+  <div class="stat-tile red">
+    <div class="sval">{{ disease }}</div>
+    <div class="slbl">Disease Detected</div>
+  </div>
+  <div class="stat-tile green">
+    <div class="sval">{{ no_disease }}</div>
+    <div class="slbl">No Disease</div>
+  </div>
+  <div class="stat-tile blue">
+    <div class="sval">{{ my_count }}</div>
+    <div class="slbl">My Predictions</div>
+  </div>
+</div>
+
+<!-- Model Accuracy Row -->
+<div class="card" style="margin-bottom:22px;">
+  <h2>🤖 Current Model Performance <span style="font-size:0.75rem;color:#aaa;font-weight:400;">(Trained on Cleveland Dataset + {{ total }} DB Records)</span></h2>
+  <div class="grid4" style="margin-bottom:14px;">
+    {% set names = {'lr':'Logistic Regression','dt':'Decision Tree','rf':'Random Forest','gb':'XGBoost (GB)'} %}
+    {% for k,nm in names.items() %}
+    <div class="model-mini">
+      <div class="mn">{{ nm }}</div>
+      <div class="mv">{{ "%.1f"|format(accs[k]*100) }}%</div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="background:var(--cream);border:1.5px solid var(--green);border-radius:9px;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:0.8rem;color:var(--text2);font-weight:600;">⭐ Stacked Ensemble (Best Model)</div>
+      <div style="font-size:0.75rem;color:#aaa;">AUC-ROC: {{ "%.4f"|format(stack_auc) }}</div>
+    </div>
+    <div style="font-size:1.6rem;font-weight:900;color:var(--green);">{{ "%.1f"|format(stack_acc*100) }}%</div>
+  </div>
+  {% if session.role == 'admin' %}
+  <form method="post" action="{{ url_for('retrain') }}" style="margin-top:12px;">
+    <button type="submit" class="btn btn-outline btn-sm">🔁 Force Retrain Model</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="grid2">
+  <!-- Quick Predict CTA -->
+  <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:36px 24px;">
+    <div style="font-size:3rem;margin-bottom:12px;">🫀</div>
+    <h2 style="border:none;padding:0;margin-bottom:8px;font-size:1.1rem;color:var(--brown3);">Run a New Prediction</h2>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:18px;">Enter 13 clinical parameters and get an instant heart disease risk assessment with a downloadable PDF report.</p>
+    <a href="{{ url_for('predict_page') }}" class="btn btn-primary">🔍 Start Prediction</a>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <h2>🕐 Recent Predictions</h2>
+    {% if recent %}
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>User</th><th>Age</th><th>Result</th><th>Risk%</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for r in recent %}
+          <tr>
+            <td><b>{{ r.username }}</b></td>
+            <td>{{ r.age|int }}</td>
+            <td>
+              {% if r.prediction == 1 %}
+                <span class="tag tag-red">⚠ Disease</span>
+              {% else %}
+                <span class="tag tag-green">✓ Clear</span>
+              {% endif %}
+            </td>
+            <td>{{ "%.1f"|format(r.probability*100) }}%</td>
+            <td style="font-size:0.75rem;color:#aaa;">{{ r.created_at[:16] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;">
+      <a href="{{ url_for('history') }}" class="btn btn-outline btn-sm">View All →</a>
+    </div>
+    {% else %}
+    <div class="empty">
+      <div class="eicon">📭</div>
+      <div>No predictions yet.<br>Be the first to run one!</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- How it Works -->
+<div class="card" style="margin-top:22px;">
+  <h2>ℹ️ How It Works</h2>
+  <div class="grid3" style="gap:20px;">
+    <div style="text-align:center;padding:16px;">
+      <div style="font-size:2rem;margin-bottom:8px;">1️⃣</div>
+      <b style="color:var(--brown);">Enter Patient Data</b>
+      <p style="font-size:0.82rem;color:var(--text2);margin-top:6px;">Fill in 13 clinical parameters like age, cholesterol, BP, heart rate etc.</p>
+    </div>
+    <div style="text-align:center;padding:16px;">
+      <div style="font-size:2rem;margin-bottom:8px;">2️⃣</div>
+      <b style="color:var(--brown);">ML Models Analyse</b>
+      <p style="font-size:0.82rem;color:var(--text2);margin-top:6px;">4 algorithms + Stacked Ensemble predict heart disease risk.</p>
+    </div>
+    <div style="text-align:center;padding:16px;">
+      <div style="font-size:2rem;margin-bottom:8px;">3️⃣</div>
+      <b style="color:var(--brown);">Get PDF Report</b>
+      <p style="font-size:0.82rem;color:var(--text2);margin-top:6px;">Download a clinical-style PDF report. Data stored & used to improve the model.</p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
