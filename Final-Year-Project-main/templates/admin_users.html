@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Users — Heart Minder Admin{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>👥 User Management</h1>
+  <p>Admin panel — all registered users in the system.</p>
+</div>
+
+<div class="card">
+  <h2>Registered Users <span style="font-size:0.78rem;font-weight:400;color:#aaa;">{{ users|length }} user(s)</span></h2>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Username</th><th>Role</th><th>Registered On</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="color:#aaa;font-size:0.75rem;">{{ u.id }}</td>
+          <td><b>{{ u.username }}</b></td>
+          <td>
+            {% if u.role == 'admin' %}
+              <span class="tag tag-red">admin</span>
+            {% else %}
+              <span class="tag" style="background:var(--beige2);color:var(--brown);">user</span>
+            {% endif %}
+          </td>
+          <td style="font-size:0.82rem;color:#aaa;">{{ u.created_at[:16] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px;">
+  <h2>⚙️ Quick Admin Actions</h2>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="{{ url_for('history') }}" class="btn btn-primary">📋 View All Predictions</a>
+    <form method="post" action="{{ url_for('retrain') }}">
+      <button type="submit" class="btn btn-outline">🔁 Retrain Model</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

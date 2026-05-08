@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% block title %}Predict — Heart Minder{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <h1>🔍 Heart Disease Prediction</h1>
+  <p>Fill in the 13 clinical parameters below. Results are saved to the database and used to improve the model.</p>
+</div>
+
+<div class="grid2">
+
+  <!-- ── FORM ── -->
+  <div class="card">
+    <h2>Patient Clinical Parameters</h2>
+    <form id="pred-form">
+
+      <div class="row2">
+        <div class="form-group">
+          <label>Age (years)</label>
+          <input type="number" name="age" value="52" min="20" max="100" required>
+        </div>
+        <div class="form-group">
+          <label>Sex</label>
+          <select name="sex">
+            <option value="1">Male</option>
+            <option value="0">Female</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="form-group">
+          <label>Resting BP (mm Hg)</label>
+          <input type="number" name="trestbps" value="130" min="80" max="220" required>
+        </div>
+        <div class="form-group">
+          <label>Serum Cholesterol (mg/dL)</label>
+          <input type="number" name="chol" value="250" min="100" max="600" required>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="form-group">
+          <label>Max Heart Rate Achieved</label>
+          <input type="number" name="thalach" value="150" min="60" max="220" required>
+        </div>
+        <div class="form-group">
+          <label>ST Depression (Oldpeak)</label>
+          <input type="number" name="oldpeak" value="1.0" step="0.1" min="0" max="10" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Chest Pain Type (CP)</label>
+        <select name="cp">
+          <option value="0">0 — Typical Angina</option>
+          <option value="1">1 — Atypical Angina</option>
+          <option value="2">2 — Non-Anginal Pain</option>
+          <option value="3" selected>3 — Asymptomatic</option>
+        </select>
+      </div>
+
+      <div class="row3">
+        <div class="form-group">
+          <label>Fasting Blood Sugar &gt; 120</label>
+          <select name="fbs">
+            <option value="0">No (False)</option>
+            <option value="1">Yes (True)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Resting ECG</label>
+          <select name="restecg">
+            <option value="0">0 — Normal</option>
+            <option value="1">1 — ST-T Abnormal</option>
+            <option value="2">2 — LV Hypertrophy</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Exercise Angina</label>
+          <select name="exang">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row3">
+        <div class="form-group">
+          <label>ST Slope</label>
+          <select name="slope">
+            <option value="0">0 — Upsloping</option>
+            <option value="1">1 — Flat</option>
+            <option value="2">2 — Downsloping</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Major Vessels (0–3)</label>
+          <select name="ca">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Thalassemia</label>
+          <select name="thal">
+            <option value="1.0">1.0 — Normal</option>
+            <option value="2.0">2.0 — Fixed Defect</option>
+            <option value="3.0">3.0 — Reversable</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-red">🔍 PREDICT</button>
+    </form>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div class="card">
+    <h2>Prediction Result</h2>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      Running ML models & saving to database…
+    </div>
+
+    <div id="result-panel" style="display:none;">
+      <div class="result-box" id="result-box">
+        <div class="result-label" id="result-label"></div>
+        <div class="risk-pct" id="risk-pct"></div>
+        <div style="font-size:0.78rem;color:var(--text2);">Risk Probability (Stacked Ensemble)</div>
+      </div>
+
+      <h2 style="margin-bottom:10px;">Model Accuracies (Trained on DB Data)</h2>
+      <div class="grid2" id="model-grid" style="margin-bottom:14px;gap:10px;"></div>
+
+      <div style="background:var(--cream);border:1.5px solid var(--green);border-radius:9px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:0.82rem;color:var(--text2);">⭐ Stacked Ensemble Accuracy</div>
+        <div style="font-size:1.2rem;font-weight:900;color:var(--green);" id="stack-acc-disp"></div>
+      </div>
+
+      <h2 style="margin-bottom:10px;">Individual Model Risk Scores</h2>
+      <div id="prob-bars" style="margin-bottom:16px;"></div>
+
+      <form id="pdf-form" method="post" action="/download_pdf">
+        <div id="hidden-inputs"></div>
+        <button type="submit" class="btn btn-outline" style="width:100%;justify-content:center;">
+          📄 Download PDF Report
+        </button>
+      </form>
+
+      <div style="margin-top:10px;padding:10px;background:var(--cream);border-radius:8px;font-size:0.78rem;color:var(--text2);text-align:center;">
+        ✅ This prediction has been saved to the database and the model has been retrained.
+      </div>
+    </div>
+
+    <div class="empty" id="empty-state">
+      <div class="eicon">🫀</div>
+      <div>Fill the patient details and click <b>PREDICT</b> to see results here.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Attribute Reference -->
+<div class="card" style="margin-top:22px;">
+  <h2>📖 Parameter Reference</h2>
+  <div class="grid2" style="font-size:0.82rem;color:var(--text2);gap:6px;">
+    <div><b style="color:var(--brown);">CP:</b> 0=Typical Angina, 1=Atypical, 2=Non-Anginal, 3=Asymptomatic</div>
+    <div><b style="color:var(--brown);">RestECG:</b> 0=Normal, 1=ST-T Abnormality, 2=LV Hypertrophy</div>
+    <div><b style="color:var(--brown);">Slope:</b> 0=Upsloping, 1=Flat, 2=Downsloping</div>
+    <div><b style="color:var(--brown);">Thal:</b> 1=Normal, 2=Fixed Defect, 3=Reversable Defect</div>
+    <div><b style="color:var(--brown);">CA:</b> Number of major vessels colored by fluoroscopy (0–3)</div>
+    <div><b style="color:var(--brown);">Oldpeak:</b> ST depression induced by exercise relative to rest</div>
+  </div>
+</div>
+
+<script>
+const MNAMES = {lr:'Logistic Regression',dt:'Decision Tree',rf:'Random Forest',gb:'XGBoost (GB)'};
+const MCOLORS = {lr:'#2980b9',dt:'#e67e22',rf:'#9b59b6',gb:'#27ae60'};
+
+document.getElementById('pred-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('result-panel').style.display = 'none';
+  document.getElementById('loader').style.display = 'block';
+
+  const fd = new FormData(e.target);
+  try {
+    const res = await fetch('/predict', {method:'POST', body:fd});
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    if (data.error) { alert('Error: '+data.error); return; }
+
+    const box = document.getElementById('result-box');
+    const lbl = document.getElementById('result-label');
+    const pct = document.getElementById('risk-pct');
+    if (data.prediction === 1) {
+      box.className = 'result-box disease';
+      lbl.className = 'result-label disease'; lbl.textContent = '⚠️ HEART DISEASE DETECTED';
+      pct.className = 'risk-pct disease';
+    } else {
+      box.className = 'result-box ok';
+      lbl.className = 'result-label ok'; lbl.textContent = '✅ NO HEART DISEASE DETECTED';
+      pct.className = 'risk-pct ok';
+    }
+    pct.textContent = data.probability + '%';
+
+    const grid = document.getElementById('model-grid');
+    grid.innerHTML = '';
+    for (const [k,v] of Object.entries(data.model_accs)) {
+      grid.innerHTML += `<div class="model-mini"><div class="mn">${MNAMES[k]||k}</div><div class="mv">${v}%</div></div>`;
+    }
+    document.getElementById('stack-acc-disp').textContent = data.stack_acc + '%';
+
+    const bars = document.getElementById('prob-bars');
+    bars.innerHTML = '';
+    for (const [k,v] of Object.entries(data.individual)) {
+      bars.innerHTML += `<div class="pbar-wrap">
+        <div class="pbar-hdr"><span>${MNAMES[k]||k}</span><span>${v}%</span></div>
+        <div class="pbar-bg"><div class="pbar-fill" style="width:${v}%;background:${MCOLORS[k]||'#888'};"></div></div>
+      </div>`;
+    }
+
+    const hidden = document.getElementById('hidden-inputs');
+    hidden.innerHTML = '';
+    for (const [k,v] of fd.entries()) {
+      hidden.innerHTML += `<input type="hidden" name="${k}" value="${v}">`;
+    }
+
+    document.getElementById('result-panel').style.display = 'block';
+  } catch(err) {
+    document.getElementById('loader').style.display = 'none';
+    alert('Error: ' + err);
+  }
+});
+</script>
+{% endblock %}
