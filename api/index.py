@@ -3,8 +3,8 @@ from flask import (Flask, render_template, request, redirect,
 import sqlite3, io, hashlib, os, pickle, json
 import numpy as np
 from datetime import datetime
-from flask import Flask
-app = Flask(__name__)
+
+app = Flask(__name__, template_folder="../templates")
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -25,10 +25,25 @@ from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
 from reportlab.lib.enums import TA_CENTER
 import joblib
 
-
-
 app.secret_key = os.environ.get('SECRET_KEY', 'heartminder_secret_2025')
-DB_PATH = 'heartminder.db'
+
+# Paths for Vercel /api structure
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, 'heartminder.db')
+
+# ─── Vercel Compatibility ─────────────────────────────────────────────────────
+if os.environ.get('VERCEL'):
+    import shutil
+    TMP_DB = os.path.join('/tmp', 'heartminder.db')
+    if not os.path.exists(TMP_DB):
+        # Check root directory for the db file
+        if os.path.exists(DB_PATH):
+            try:
+                shutil.copy(DB_PATH, TMP_DB)
+            except Exception as e:
+                print(f"Error copying DB to /tmp: {e}")
+    DB_PATH = TMP_DB
+# ──────────────────────────────────────────────────────────────────────────────
 
 # ─── Cleveland base dataset ───────────────────────────────────────────────────
 BASE_DATA = [
@@ -555,6 +570,10 @@ def api_stats():
     return jsonify({'total': total, 'disease': disease,
                     'no_disease': total-disease,
                     'stack_acc': round(STACK_ACC*100,2)})
+
+# IMPORTANT for Vercel
+def handler(request, response):
+    return app(request.environ, response.start_response)
 
 if __name__ == '__main__':
     import os 

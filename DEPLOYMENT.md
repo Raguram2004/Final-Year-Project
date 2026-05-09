@@ -29,14 +29,20 @@ These platforms typically use the `Procfile` and `requirements.txt`.
 4. **Build Command:** `pip install -r requirements.txt`
 5. **Start Command:** `gunicorn app:app` (This is already in the `Procfile`).
 
-## 3. Database Note (SQLite)
-The application uses SQLite (`heartminder.db`). 
-- On platforms like **Render** or **Railway**, if you don't use a "Persistent Disk", the database will be reset every time the application restarts.
-- For a final year project, this is usually acceptable. If you need permanent data, you would need to:
-  1. Use a Persistent Disk (available on Render/Railway).
-  2. Or, switch to a managed database like PostgreSQL (requires code changes to use `psycopg2`).
+## 3. Deploying to Vercel
+Vercel is a serverless platform. This project has been configured with `vercel.json` to support it.
 
-## 4. Key Fixes Applied:
+### Steps:
+1. **Push your code** to a GitHub repository.
+2. **Import the project** in Vercel.
+3. **Framework Preset:** Vercel should auto-detect the configuration from `vercel.json`.
+4. **Environment Variables:**
+   - `SECRET_KEY`: Set this to a random string.
+5. **Database Note:** 
+   - Vercel uses a read-only filesystem. The application has been updated to use `/tmp/heartminder.db` for the database.
+   - **Important:** Data in `/tmp` is temporary and will be cleared when the serverless function restarts. For permanent data, you should switch to a managed database like PostgreSQL (Supabase/Neon).
+
+## 4. Database Note (General)
 - **Restructured:** Moved `app.py` and other files to the root directory so Flask can find the `templates` folder automatically.
 - **Fixed Crash:** Removed a broken `joblib.load` call that caused the app to crash on startup.
 - **Security:** Added support for `SECRET_KEY` environment variable.
